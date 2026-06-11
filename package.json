@@ -5,7 +5,8 @@
   "scripts": {
     "index": "tsx src/cli.ts",
     "dev": "tsx src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "tsx src/server.ts"
   },
   "dependencies": {
     "@babel/parser": "^7.29.7",
