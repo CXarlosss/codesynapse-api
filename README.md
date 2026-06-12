@@ -1,52 +1,55 @@
-# CodeSynapse
+# CodeSynapse API
 
-## Plataforma de Inteligencia Visual 100% Local
-
-CodeSynapse es una plataforma de análisis semántico y visualización de código diseñada para funcionar completamente en local. A diferencia de las soluciones basadas en cloud (como OpenAI o Pinecone), CodeSynapse procesa, indexa y consulta tu código en tu propia máquina, garantizando máxima privacidad y velocidad.
-
-## 🚀 Características
-
-- **Indexado Semántico Local:** Utiliza embeddings generados localmente.
-- **Búsqueda Vectorial:** Motor de búsqueda rápido con SQLite.
-- **Chat Contextual con SSE:** Respuestas en tiempo real integradas con el contexto del código.
-- **Grafo de Dependencias (Nuevo!):** Visualización interactiva de tu proyecto. Los archivos son nodos, y los imports/exports son las aristas.
-- **Análisis de Complejidad Ciclomática:** Los nodos en el grafo cambian de color (verde, amarillo, rojo) según la complejidad del código.
-- **100% Local:** Sin APIs externas, sin filtrado de datos a la nube.
+> Motor de inteligencia semántica 100% local sobre repositorios de código.
 
 ## 🏗️ Arquitectura
 
 ```mermaid
 graph TD
-    A[Parser (Babel)] --> B[Embeddings Model]
-    B --> C[(VectorDB - SQLite)]
-    C --> D[RAG Engine]
-    A --> E[Grafo de Dependencias]
-    D --> F[Chat Contextual]
-    E --> G[Visualización Interactiva]
-    F <--> G
+    A[Repositorio Local] -->|AST| B[Parser Babel]
+    B --> C[Chunks: funciones<br/>clases, exports]
+    C -->|Xenova/all-MiniLM| D[Embeddings 384-dim]
+    D -->|sqlite-vec| E[Vector DB Local]
+    E -->|Similarity Search| F[Chat RAG]
+    F -->|SSE Streaming| G[Respuesta en tiempo real]
+    A -->|AST| H[Grafo de Dependencias]
+    H -->|Complexidad| I[Heatmap Visual]
 ```
 
-## ⚡ Benchmark
+## 🧠 100% Local, 0% Cloud
 
-- **Indexado de 150 archivos:** ~18s
-- **Query semántica:** ~2.7s
-- **Grafo 80 nodos:** ~60fps continuos
+| Componente | Solución Local | Alternativa Cloud | Por qué local |
+|---|---|---|---|
+| Embeddings | Xenova/all-MiniLM | OpenAI Ada | Sin API keys, sin costos, sin latencia de red |
+| Vector DB | sqlite-vec | Pinecone/Weaviate | Portable, sin infraestructura, SQL nativo |
+| LLM | Ollama (opcional) | GPT-4 | Fallback offline inteligente funciona sin GPU |
 
-## ¿Por qué 100% Local?
+## ⚡ Benchmarks
+- Indexado 150 archivos: 18.2s
+- Query semántica: 2.7s (incluye embedding + search + streaming)
+- Embeddings por chunk: ~120ms (CPU, sin GPU)
+- DB size: ~45MB para 150 chunks
 
-1. **Privacidad:** Tu código es tu propiedad intelectual. No enviamos ni un solo bit a servidores de terceros.
-2. **Latencia:** Al no depender de la red, las respuestas de modelos locales y búsquedas vectoriales son inmediatas.
-3. **Costo:** Sin suscripciones a APIs de IA o bases de datos vectoriales.
+## 🛠️ Stack
+Node.js · TypeScript · @xenova/transformers · sqlite-vec · @babel/parser · Fastify · SSE
 
-## 🛠️ Deploy
+## 🚀 Uso
 
-El proyecto se puede desplegar fácilmente con Docker:
-- **Backend (API):** `Dockerfile` en `codesynapse-api` (Node 20).
-- **Frontend (Web):** `Dockerfile` multi-stage (Node 20 + Nginx) en `codesynapse-web`.
+```bash
+# Indexar repositorio
+npm run index ./ruta/al/proyecto
 
-Desplegado en Railway y Vercel.
+# Servidor API
+npm run dev
+```
 
-## 🎨 Demo
+## 🔗 Endpoints
 
-![Demo Grafo](https://via.placeholder.com/800x400.png?text=CodeSynapse+Graph+Demo)
-*(Imagínate un GIF mostrando chat + grafo + click en chip en 10s)*
+| Endpoint | Descripción |
+|---|---|
+| `GET /api/chat/stream?question=...` | Chat con SSE streaming |
+| `GET /api/graph` | Grafo de dependencias + complejidad |
+| `GET /api/file?path=...` | Lectura segura de archivos |
+
+## 📄 Licencia
+MIT
